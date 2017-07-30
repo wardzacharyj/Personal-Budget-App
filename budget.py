@@ -51,16 +51,14 @@ class Purchase(db.Model):
         self.cost = cost
 
     def __repr__(self):
-        return '<Purchase = %r %r %r %r>' % (self.id, self.room_id, self.sender_id, self.sender_name)
+        return '<Purchase = %r %r %r %r>' % (self.id, self.cat_id, self.name, self.cost)
 
     def as_dict(self):
         return {
             "id": self.id,
-            "room_id": self.room_id,
-            "sender_id": self.sender_id,
-            "sender_name": self.sender_name,
-            "message": self.message,
-            "time": self.time
+            "cat_id": self.cat_id,
+            "name": self.name,
+            "cost": self.cost
         }
 
 
@@ -69,7 +67,7 @@ def initdb_command():
     db.drop_all()
     db.create_all()
 
-    default_cat = Category('Uncategorized', 0)
+    default_cat = Category('uncategorized', 0)
     db.session.add(default_cat)
     db.session.commit()
 
@@ -97,6 +95,13 @@ def add_category(new_cat_name, limit):
 def remove_category(selected_cat):
     cat_exists = Category.query.filter_by(name=selected_cat).first()
     if cat_exists:
+        cats_p = Purchase.query.filter_by(cat_id=cat_exists.id).all()
+        if cats_p:
+            try:
+                for p in cats_p:
+                    db.session.delete(p)
+            except exc.SQLAlchemyError:
+                pass
         try:
             db.session.delete(cat_exists)
             db.session.commit()
@@ -109,9 +114,14 @@ def remove_category(selected_cat):
 
 def get_category(selected_cat_name):
     cat_exists = Category.query.filter_by(name=selected_cat_name).first().as_dict()
+    print(cat_exists)
     if cat_exists:
+        s = db.session.query(func.sum(Purchase.cost)).filter(Purchase.cat_id == cat_exists['id']).scalar()
+        if s is None:
+            s = 0
         return {
             'name': cat_exists['name'],
+            'cost': s,
             'limit': cat_exists['limit'],
             'purchases': get_purchases_by_cat(selected_cat_name)
         }
@@ -121,7 +131,13 @@ def get_category(selected_cat_name):
 
 def get_all_categories():
     try:
-        return [x.as_dict() for x in Category.query.all()]
+        raw_info = [x.as_dict() for x in Category.query.all()]
+        for item in raw_info:
+            s = db.session.query(func.sum(Purchase.cost)).filter(Purchase.id == item['id']).scalar()
+            if s is None:
+                s = 0
+            item['cost'] = s
+        return raw_info
     except exc.SQLAlchemyError:
         return {}
 
@@ -146,7 +162,7 @@ def add_purchase(name, category, cost):
 
 def remove_purchase(p_id):
     p = Purchase.query.filter_by(id=p_id).first()
-    if purchase:
+    if p:
         try:
             db.session.delete(p)
             db.session.commit()
@@ -155,6 +171,19 @@ def remove_purchase(p_id):
             pass
 
     return False
+
+
+def remove_purchases(cat, p_list):
+    cat_id = Category.query.filter_by(name=cat).first().id
+    for x in p_list:
+        try:
+            temp = Purchase.query.filter(and_(Purchase.cat_id == cat_id, Purchase.name == x)).first()
+            db.session.delete(temp)
+        except exc.SQLAlchemyError:
+            return False
+
+    db.session.commit()
+    return True
 
 
 def get_all_purchases():
@@ -185,55 +214,62 @@ def get_purchases_by_cat(cat_name):
 
 @app.route("/")
 def skeleton():
-    pass
+    return render_template('skeleton.html')
 
 
 @app.route("/cats", methods=["GET", "DELETE", "POST"])
-def cat():
+def cats():
 
     if request.method == 'GET':
         if 'cat' in request.args:
-            return {
+            return json.dumps({
                 'category': get_category(request.args['cat'])
-            }
+            })
+        elif 'cat_page' in request.args:
+            print(get_category(request.args['cat_page']))
+            return render_template('purchaseList.html', info=get_category(request.args['cat_page']))
         else:
-            return {
+            return json.dumps({
                 'categories': get_all_categories()
-            }
+            })
     elif request.method == 'DELETE' and 'cat' in request.args:
-        return {
+        return json.dumps({
             'completed': remove_category(request.args.get('cat'))
-        }
-    elif request.method == 'POST' and 'new_cat_name' in request.json and 'cat_limit' in request.json:
-        return {
-            'completed': add_category(request.json['new_cat_name'], request.json['cat_limit'])
-        }
+        })
+    elif request.method == 'POST' and 'new_cat_name' in request.json and 'new_cat_limit' in request.json:
+        return json.dumps({
+            'completed': add_category(request.json['new_cat_name'], request.json['new_cat_limit'])
+        })
 
 
-@app.route("/purchases")
-def purchase():
+@app.route("/purchases", methods=["GET", "DELETE", "POST"])
+def purchases():
+
     if request.method == 'GET':
         if 'cat' in request.args:
-            return {
+            return json.dumps({
                 'purchases': get_purchases_by_cat(request.args.get('cat'))
-            }
+            })
         elif 'id' in request.args:
-            return {
+            return json.dumps({
                 'purchase': get_purchase_by_id(request.args.get('id'))
-            }
+            })
         else:
-            return {
+            return json.dumps({
                 'purchase': get_all_purchases()
-            }
+            })
     elif request.method == 'DELETE' and 'id' in request.args:
-        return {
+        return json.dumps({
             'completed': remove_purchase(request.args.get('id'))
-        }
-
+        })
+    elif request.method == 'DELETE' and 'cat' in request.json and 'names' in request.json:
+        return json.dumps({
+            'completed': remove_purchases(request.json['cat'], request.json['names'])
+        })
     elif request.method == 'POST' and 'name' in request.json and 'category' in request.json and 'cost' in request.json:
-        return {
+        return json.dumps({
             'completed': add_purchase(request.json['name'], request.json['category'], request.json['cost'])
-        }
+        })
 
 
 if __name__ == '__main__':
