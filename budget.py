@@ -3,8 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import and_
 from sqlalchemy import func
 from sqlalchemy import exc
-
-from sqlalchemy.exc import IntegrityError
 import json
 
 
@@ -44,21 +42,24 @@ class Purchase(db.Model):
     cat_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
     name = db.Column(db.String(30), nullable=False)
     cost = db.Column(db.Integer, nullable=False)
+    date = db.Column(db.String(10), nullable=False)
 
-    def __init__(self, cat_id, name, cost):
+    def __init__(self, cat_id, name, cost, date):
         self.cat_id = cat_id
         self.name = name
         self.cost = cost
+        self.date = date
 
     def __repr__(self):
-        return '<Purchase = %r %r %r %r>' % (self.id, self.cat_id, self.name, self.cost)
+        return '<Purchase = %r %r %r %r %r>' % (self.id, self.cat_id, self.name, self.cost, self.date)
 
     def as_dict(self):
         return {
             "id": self.id,
             "cat_id": self.cat_id,
             "name": self.name,
-            "cost": self.cost
+            "cost": self.cost,
+            "date": self.date
         }
 
 
@@ -133,10 +134,11 @@ def get_all_categories():
     try:
         raw_info = [x.as_dict() for x in Category.query.all()]
         for item in raw_info:
-            s = db.session.query(func.sum(Purchase.cost)).filter(Purchase.id == item['id']).scalar()
+            s = db.session.query(func.sum(Purchase.cost)).filter(Purchase.cat_id == item['id']).scalar()
             if s is None:
                 s = 0
             item['cost'] = s
+        print(raw_info)
         return raw_info
     except exc.SQLAlchemyError:
         return {}
@@ -146,11 +148,11 @@ def get_all_categories():
 #                                Purchase Controller                                      #
 ###########################################################################################
 
-def add_purchase(name, category, cost):
+def add_purchase(name, category, cost, date):
     cat_id = Category.query.filter_by(name=category).first().id
     if cat_id:
         try:
-            p = Purchase(cat_id, name, cost)
+            p = Purchase(cat_id, name, cost, date)
             db.session.add(p)
             db.session.commit()
             return True
@@ -266,9 +268,11 @@ def purchases():
         return json.dumps({
             'completed': remove_purchases(request.json['cat'], request.json['names'])
         })
-    elif request.method == 'POST' and 'name' in request.json and 'category' in request.json and 'cost' in request.json:
+    elif request.method == 'POST' and 'name' in request.json and 'category' in request.json and \
+                                      'cost' in request.json and 'date' in request.json:
         return json.dumps({
-            'completed': add_purchase(request.json['name'], request.json['category'], request.json['cost'])
+            'completed': add_purchase(request.json['name'], request.json['category'],
+                                      request.json['cost'], request.json['date'])
         })
 
 

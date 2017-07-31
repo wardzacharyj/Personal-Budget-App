@@ -13,12 +13,20 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 
     initCreateDialog();
-    initGraph();
+
+    if(document.getElementsByTagName('title')[0].textContent !== 'uncategorized')
+        initGraph();
+    else
+        document.getElementsByClassName('graph_holder')[0].classList.add('hidden');
+
+
     initListItemListeners();
 
 
     document.getElementById('cat-fab').addEventListener('click', fabListener);
-    document.getElementById('delete_cat').addEventListener('click', deleteCategory);
+
+    if(document.getElementsByTagName('title')[0].textContent !== 'uncategorized')
+        document.getElementById('delete_cat').addEventListener('click', deleteCategory);
 
 
 
@@ -71,8 +79,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
         }
     }
 
+
     /**
-     *
+     *  Deletes the currently open category
      */
     function deleteCategory(){
 
@@ -99,6 +108,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         xhr.send(null);
     }
 
+
     /**
      *  Initializes dialog listeners
      *
@@ -110,12 +120,14 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
         document.getElementById('new_purchase_name_field').addEventListener('input', isValidForm);
         document.getElementById('new_purchase_cost_field').addEventListener('input', isValidForm);
+        document.getElementById('new_purchase_date_field').addEventListener('input', isValidForm);
 
         createOption.addEventListener('click', function() {
             requestCreatePurchase(
                 document.getElementById('new_purchase_name_field').value,
                 document.getElementsByTagName('title')[0].textContent,
-                document.getElementById('new_purchase_cost_field').value
+                document.getElementById('new_purchase_cost_field').value,
+                document.getElementById('new_purchase_date_field').value
             );
             dialog.close();
             (document.getElementById('new_purchase_name_field').parentNode).MaterialTextfield.checkDirty();
@@ -123,6 +135,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
             (document.getElementById('new_purchase_cost_field').parentNode).MaterialTextfield.checkDirty();
             (document.getElementById('new_purchase_cost_field').parentNode).MaterialTextfield.change();
+
+            (document.getElementById('new_purchase_date_field').parentNode).MaterialTextfield.checkDirty();
+            (document.getElementById('new_purchase_date_field').parentNode).MaterialTextfield.change();
         });
 
         dismissOption.addEventListener('click', function(){
@@ -132,6 +147,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
             (document.getElementById('new_purchase_cost_field').parentNode).MaterialTextfield.checkDirty();
             (document.getElementById('new_purchase_cost_field').parentNode).MaterialTextfield.change();
+
+            (document.getElementById('new_purchase_date_field').parentNode).MaterialTextfield.checkDirty();
+            (document.getElementById('new_purchase_date_field').parentNode).MaterialTextfield.change();
         });
     }
 
@@ -153,11 +171,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 if(arrayOfAllCheckboxes[i].checked){
                     deletionArray.push(arrayOfAllCheckboxes[i].id);
                     totalCost+= parseInt(arrayOfAllCheckboxes[i].parentNode.parentNode.parentNode.firstElementChild
-                        .nextElementSibling.nextElementSibling.textContent.substring(1));
+                        .nextElementSibling.nextElementSibling.nextElementSibling.textContent.substring(1));
 
                 }
             }
-
+            console.log(totalCost);
             requestDeletePurchases(document.getElementsByTagName('title')[0].textContent, deletionArray, totalCost);
         }
     }
@@ -172,9 +190,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
         var pNameField = document.getElementById('new_purchase_name_field');
         var pCostField = document.getElementById('new_purchase_cost_field');
+        var pDateField = document.getElementById('new_purchase_date_field');
+
 
         if(pNameField.value.length > 0 && checkDuplicateName(pNameField.value) &&
-            pCostField.validity.valid && pCostField.value.length > 0){
+            pCostField.validity.valid && pCostField.value.length > 0 && pDateField.validity.valid){
             createButton.classList.remove('mdl-button--disabled');
         }
         else {
@@ -252,8 +272,15 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
                 removePurchases(names);
                 setCurrentCost(getCurrentCost()-parseInt(totalCost));
-                updateLimitLabel();
-                setProgress(getCurrentCost()/getLimit());
+
+                if(document.getElementsByTagName('title')[0].textContent === 'uncategorized'){
+                    updateuUcategorizedLimitLabel();
+                }
+                else {
+                    updateLimitLabel();
+                    setProgress(getCurrentCost()/getLimit());
+                }
+
             }
             else {
                 // signal('Failed to delete purchase');
@@ -284,13 +311,14 @@ document.addEventListener("DOMContentLoaded", function(event) {
      *      response from the server
      *
      */
-    function requestCreatePurchase(name, category, cost){
+    function requestCreatePurchase(name, category, cost, date){
 
         var purchase_object = JSON.stringify(
             {
                 name: name,
                 category: category,
-                cost: cost
+                cost: cost,
+                date: date
             }
         );
 
@@ -304,11 +332,18 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
             }
             if(res["completed"]){
-                // signal('Failed to create new category');
-                insertPurchase(name, cost);
+
+                insertPurchase(name, cost, date);
                 setCurrentCost(getCurrentCost()+parseInt(cost));
-                updateLimitLabel();
-                setProgress(getCurrentCost()/getLimit());
+
+                if(document.getElementsByTagName('title')[0].textContent === 'uncategorized'){
+                    updateuUcategorizedLimitLabel();
+                }
+                else {
+                    updateLimitLabel();
+                    setProgress(getCurrentCost()/getLimit());
+                }
+
 
             }
             else {
@@ -328,25 +363,35 @@ document.addEventListener("DOMContentLoaded", function(event) {
         return limitText.substring(limitText.lastIndexOf('$')+1, limitText.length)
     }
 
+
     /**
      * Get Current Cost for category
      */
     function getCurrentCost(){
-        if(intitSignal == 0) {
+
+        if(intitSignal == 0 && document.getElementsByTagName('title')[0].textContent !== 'uncategorized') {
             var costBanner = document.getElementById('limit_banner').textContent;
             var value = costBanner.substring(1, costBanner.indexOf('/'));
             currentCost = value;
             intitSignal = 1;
         }
+        else if(intitSignal == 0){
+
+            var costBanner = document.getElementById('limit_banner').textContent;
+            currentCost = costBanner.substring(1);
+            intitSignal = 1;
+        }
+
         return parseInt(currentCost);
     }
+
 
     /**
      * Set Current Cost for category
      */
     function setCurrentCost(newCost){
         currentCost = newCost;
-        console.log(currentCost);
+
         if(currentCost > 0){
             document.getElementById('table_banner').textContent = 'Purchase Log';
             if(document.getElementsByTagName('table')[0].classList.contains('hidden')){
@@ -354,7 +399,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
             }
         }
         else {
-            console.log('made it');
             document.getElementById('table_banner').textContent = 'No Purchases Logged';
             if(!document.getElementsByTagName('table')[0].classList.contains('hidden')){
                 document.getElementsByTagName('table')[0].classList.add('hidden')
@@ -370,8 +414,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
      *
      * @param name
      * @param cost
+     * @param date
      */
-    function insertPurchase(name, cost){
+    function insertPurchase(name, cost, date){
 
         if(document.getElementsByTagName('table')[0].classList.contains('hidden')){
             document.getElementsByTagName('table')[0].classList.remove('hidden');
@@ -405,11 +450,16 @@ document.addEventListener("DOMContentLoaded", function(event) {
         nameCell.classList.add('mdl-data-table__cell--non-numeric');
         nameCell.textContent = name;
 
+
+        var dateCell = document.createElement('td');
+        dateCell.textContent = date;
+
         var costCell = document.createElement('td');
         costCell.textContent = '$'+cost;
 
         newRow.appendChild(checkCell);
         newRow.appendChild(nameCell);
+        newRow.appendChild(dateCell);
         newRow.appendChild(costCell);
         parent.appendChild(newRow);
 
@@ -442,6 +492,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         }
     }
 
+
     /**
      * Update limit label
      */
@@ -450,6 +501,14 @@ document.addEventListener("DOMContentLoaded", function(event) {
         limitLabel.textContent = '$'+getCurrentCost()+' / $'+getLimit();
     }
 
+
+    /**
+     * Update uncategorized limit label
+     */
+    function updateuUcategorizedLimitLabel(){
+        var limitLabel = document.getElementById('limit_banner');
+        limitLabel.textContent = '$'+getCurrentCost();
+    }
 
      /**
      * Initializes the progress bar of a category card

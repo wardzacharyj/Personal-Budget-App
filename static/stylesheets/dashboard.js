@@ -105,6 +105,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 });
             }
             else {
+                console.log(item['cost']);
+                console.log(item['limit']);
+
                 addNewCard(item['name'], item['cost']/item['limit'], item['cost'], item['limit']);
             }
         })

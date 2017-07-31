@@ -42,9 +42,11 @@
                 <div class="mdl-layout__header-row">
                     <span class="mdl-layout-title">{{ info['name'] }}</span>
                     <div class="mdl-layout-spacer"></div>
+                    {% if info['name'] != 'uncategorized' %}
                     <label id="delete_cat" class="mdl-button mdl-js-button mdl-button--icon" for="search">
                         <i class="material-icons">delete</i>
                     </label>
+                    {% endif %}
                 </div>
             </header>
 
@@ -63,6 +65,11 @@
                             <input class="mdl-textfield__input" type="text" pattern="^[1-9][0-9]*$" id="new_purchase_cost_field">
                             <label class="mdl-textfield__label" for="new_purchase_cost_field">Cost of purchase...</label>
                             <span class="mdl-textfield__error">Please only input a positive number</span>
+                        </div>
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <input class="mdl-textfield__input" type="text" pattern="^(0[1-9]|1[0-2])\/(0[1-9]|1\d|2\d|3[01])\/(19|20)\d{2}$" id="new_purchase_date_field">
+                            <label class="mdl-textfield__label" for="new_purchase_date_field">Date</label>
+                            <span class="mdl-textfield__error">The date must be in MM/DD/YYYY format</span>
                         </div>
                     </div>
                     <div class="mdl-dialog__actions">
@@ -88,7 +95,11 @@
                             <div class="mdl-cell mdl-cell--6-col">
                                 <div class="graph_holder" style="padding: 20px;"></div>
                                 <div>
-                                    <h6 id="limit_banner" style="text-align: center">${{ info['cost'] }}/ ${{ info['limit'] }}</h6>
+                                    {% if info['name'] == 'uncategorized' %}
+                                        <h6 id="limit_banner" style="text-align: center">${{ info['cost'] }}</h6>
+                                    {% else %}
+                                        <h6 id="limit_banner" style="text-align: center">${{ info['cost'] }}/ ${{ info['limit'] }}</h6>
+                                    {% endif %}
                                 </div>
                             </div>
 
@@ -96,6 +107,7 @@
                             <div class="mdl-cell mdl-cell--6-col">
 
                                 {% if info['purchases']|length > 0 %}
+                                    <h6 id='table_banner' style="margin: auto; text-align: center">Purchase Log</h6>
                                     <table class="mdl-data-table mdl-js-data-table custom-table">
                                 {% else %}
                                     <h6 id='table_banner' style="margin: auto; text-align: center">No Purchases Logged</h6>
@@ -110,6 +122,7 @@
                                                 </label>
                                             </th>
                                             <th class="mdl-data-table__cell--non-numeric">Purchases</th>
+                                            <th>Date</th>
                                             <th>Cost</th>
                                         </tr>
                                     </thead>
@@ -124,7 +137,9 @@
                                                     </label>
                                                 </td>
                                                 <td class="mdl-data-table__cell--non-numeric">{{ p['name'] }}</td>
+                                                <td>{{ p['date'] }}</td>
                                                 <td>${{ p['cost'] }}</td>
+
                                             </tr>
                                         {% endfor %}
 
