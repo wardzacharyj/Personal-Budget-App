@@ -96,7 +96,7 @@ Other file name(s) (if relevant):
 
 
     stylesheets/~material
-        - Contains the Material Design CSS library, progressbar.js, and own custom library
+        - Contains the Material Design CSS library, progressbar.js, and own custom css
 
 
 
@@ -116,7 +116,7 @@ The total spending percent banner in the top right on category pages is based on
     EX
         If you had two categories A and B. A having a limit of 100 and B having a limit of 1000. The A
         category page would display ~9% in the top right, because its ~9% percent of your total budget,
-        whereas B would display 91%
+        whereas B would display ~91%
 
 I tried to make my application as restful as possible, meaning all my GET requests are lookups,
 my POSTS are for creation/mutation, and my DELETES are for deletion. In the case where I do not need an
