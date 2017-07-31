@@ -121,23 +121,20 @@ def get_category(selected_cat_name):
             s = 0
         pts = db.session.query(func.sum(Category.limit)).scalar()
 
-        if selected_cat_name == 'uncategorized':
-            uncat_id = Category.query.filter_by(name='uncategorized').first().id
-            x = db.session.query(func.sum(Purchase.cost)).filter(Purchase.cat_id == uncat_id).scalar()
-            return {
-                'name': cat_exists['name'],
-                'cost': s,
-                'limit': cat_exists['limit'],
-                'purchases': get_purchases_by_cat(selected_cat_name),
-                'percent_total_spending': int(round((x/pts)*100, 0))
-            }
-        else:
+        if selected_cat_name != 'uncategorized':
             return {
                 'name': cat_exists['name'],
                 'cost': s,
                 'limit': cat_exists['limit'],
                 'purchases': get_purchases_by_cat(selected_cat_name),
                 'percent_total_spending': int(round((cat_exists['limit']/pts)*100, 0))
+            }
+        else:
+            return {
+                'name': cat_exists['name'],
+                'cost': s,
+                'limit': cat_exists['limit'],
+                'purchases': get_purchases_by_cat(selected_cat_name)
             }
 
     return {}

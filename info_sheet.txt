@@ -108,16 +108,16 @@ correctly?:
 
 Additional comments to the grader:
 
+Before starting the Server just make sure to run:
+    - export FLASK_APP=budget.py
+    - flask initdb
+
+The total spending percent banner in the top right on category pages is based on the limit set by the user
+    EX
+        If you had two categories A and B. A having a limit of 100 and B having a limit of 1000. The A
+        category page would display ~9% in the top right, because its ~9% percent of your total budget,
+        whereas B would display 91%
+
 I tried to make my application as restful as possible, meaning all my GET requests are lookups,
 my POSTS are for creation/mutation, and my DELETES are for deletion. In the case where I do not need an
 entire collection I use url parameters to request specific data. Also all my GET requests are idempotent.
-
-
-
-
-
-
-
-
-
-
