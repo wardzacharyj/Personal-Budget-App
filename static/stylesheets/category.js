@@ -96,7 +96,12 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
             }
             if(res["completed"]){
-                // signal('Deleted purchase');
+                console.log("DELETE PURCHASE - DELETE: /cats?cat="+document.getElementsByTagName('title')[0].textContent);
+                console.log('RECEIVED: ');
+                console.log(res);
+                console.log("--------------------------------");
+
+
                 window.location.replace('/')
 
             }
@@ -130,6 +135,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 document.getElementById('new_purchase_date_field').value
             );
             dialog.close();
+
+            document.getElementById('new_purchase_name_field').value = '';
+            document.getElementById('new_purchase_cost_field').value = '';
+            document.getElementById('new_purchase_date_field').value = '';
+
             (document.getElementById('new_purchase_name_field').parentNode).MaterialTextfield.checkDirty();
             (document.getElementById('new_purchase_name_field').parentNode).MaterialTextfield.change();
 
@@ -142,6 +152,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
         dismissOption.addEventListener('click', function(){
             dialog.close();
+
+            document.getElementById('new_purchase_name_field').value = '';
+            document.getElementById('new_purchase_cost_field').value = '';
+            document.getElementById('new_purchase_date_field').value = '';
+
             (document.getElementById('new_purchase_name_field').parentNode).MaterialTextfield.checkDirty();
             (document.getElementById('new_purchase_name_field').parentNode).MaterialTextfield.change();
 
@@ -175,7 +190,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
                 }
             }
-            console.log(totalCost);
+
             requestDeletePurchases(document.getElementsByTagName('title')[0].textContent, deletionArray, totalCost);
         }
     }
@@ -270,6 +285,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
             if(res["completed"]){
                 // signal('Deleted purchase');
 
+                console.log("DELETE PURCHASE - DELETE: /purchases");
+                console.log('SENT: ');
+                console.log(purchase_object);
+                console.log('RECEIVED: ');
+                console.log(res);
+                console.log("--------------------------------");
+
                 removePurchases(names);
                 setCurrentCost(getCurrentCost()-parseInt(totalCost));
 
@@ -332,6 +354,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
             }
             if(res["completed"]){
+
+                console.log("CREATE PURCHASE - POST: /purchases");
+                console.log('SENT: ');
+                console.log(purchase_object);
+                console.log('RECEIVED: ');
+                console.log(res);
+                console.log("--------------------------------");
 
                 insertPurchase(name, cost, date);
                 setCurrentCost(getCurrentCost()+parseInt(cost));

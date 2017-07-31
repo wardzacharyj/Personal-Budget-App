@@ -6,46 +6,114 @@ You must submit an information sheet with every assignment. Also be sure
 to submit all materials following the procedures described on the
 submission procedures page.
 
-Name:  
+Name:                       Zachary Ward
 
-Lecture section:  
+Lecture section:            MW 2:30
 
-Recitation day and time:  
+Recitation day and time:    M 4:30
 
-Assignment #:  
+Assignment #:               4
 
-Program due date:  
+Program due date:           8/3/2017
 
-Handed in date:  
+Handed in date:             8/1/2017
 
 Source code file name(s):
 
+    budget.py
+        - Contains DB Model and all RESTFUL endpoints specified by the rubric
+            /cats
+                GET
+                    - default
+                        * returns all category information
+                    - ?cat=[cat_name]
+                        * returns specific category information
+                    - ?cat_page=[cat_name]
+                        * returns specific category purchase page
 
+                POST
+                    - creates new cat entry in db based on
+                        {
+                            new_cat_name: [cat_name],
+                            new_cat_limit: [cat_limit]
+                        }
 
+                DELETE
+                    - ?cat=[cat_name]
+                        * deletes category for name if found in db
 
+            /purchases
+                GET
+                    - default
+                        * returns all purchases
+                    - ?cat=[cat_name]
+                        * returns all purchases for a specific category
+                    - ?id=[id]
+                        * returns the specific purchase with that id
 
+                POST
+                    - creates new purchase entry in db based on this format
+                        {
+                            name: [name]
+                            category: [category]
+                            cost: [cost]
+                            date: [date]
+                        }
+
+                DELETE
+                    - ?id=[id]
+                        * deletes a specific purchase matching the specific id
+                    - bulk deletes a set of purchases based on message expected
+                        {
+                            cat: [cat],
+                            names: [name1, name2, name3]
+                        }
 
 
 Other file name(s) (if relevant):
 
+    dashboard.js
+        - All logic and AJAJ calls for loading category summaries
+
+    category.js
+        - All logic and AJAJ calls for specific category pages
+
+    dashboard.js
+
+    skeleton.html
+        - Displays all category cards after AJAXs call. Each card, except for the unorganized card which
+          has no progress bar or limit,
+          has a title, progress bar, add purchase button, and budget label.  The progress bar indicates
+          the percentage of purchases filled with respect to the limit set for the specific category. Creating
+          categories can be done through the button on the bottom right of the page.
+
+
+    purchaseList.html
+        - Displays the specific purchases of the selected category and the same graphical information seen
+          on the category skeleton.html. Each purchase has a name, date, and cost. Modifications to the list
+          can be done through the checkboxes within the list and the floating action button on the bottom
+          right of the page.
+
+
+    stylesheets/~material
+        - Contains the Material Design CSS library, progressbar.js, and own custom library
 
 
 
-
-
-
-Does your project run without error?:
+Does your project run without error?: Yes
 
 If not, what is/are the error(s) and which parts of your program run
 correctly?:
 
 
-
-
-
-
-
 Additional comments to the grader:
+
+I tried to make my application as restful as possible, meaning all my GET requests are lookups,
+my POSTS are for creation/mutation, and my DELETES are for deletion. In the case where I do not need an
+entire collection I use url parameters to request specific data. Also all my GET requests are idempotent.
+
+
+
 
 
 

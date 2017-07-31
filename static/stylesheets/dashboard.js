@@ -1,3 +1,7 @@
+if(!!window.performance && window.performance.navigation.type === 2) {
+    window.location.reload();
+}
+
 document.addEventListener("DOMContentLoaded", function(event) {
 
     var colors = [
@@ -46,10 +50,20 @@ document.addEventListener("DOMContentLoaded", function(event) {
         dialog.close();
         newCatNameField.value = '';
         newCatLimitField.value = '';
+
+        (newCatNameField.parentNode).MaterialTextfield.checkDirty();
+        (newCatNameField.parentNode).MaterialTextfield.change();
+
+        (newCatLimitField.parentNode).MaterialTextfield.checkDirty();
+        (newCatLimitField.parentNode).MaterialTextfield.change();
     });
 
     dismissButton.addEventListener('click', function(){
         dialog.close();
+
+        newCatNameField.value = '';
+        newCatLimitField.value = '';
+
         (newCatNameField.parentNode).MaterialTextfield.checkDirty();
         (newCatNameField.parentNode).MaterialTextfield.change();
 
@@ -64,8 +78,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
         var xhr = new XMLHttpRequest();
 
         xhr.onload = function() {
-            if (xhr.readyState == 4 && xhr.status == 200)
+            if (xhr.readyState == 4 && xhr.status == 200){
+                console.log("GET ALL CATEGORY - GET: /cats");
+                console.log('RECEIVED: ');
+                console.log(JSON.parse(xhr.responseText));
+                console.log("--------------------------------");
                 callback(JSON.parse(xhr.responseText));
+            }
             else
                 huh('Failed to Fetch Categories')
         };
@@ -105,9 +124,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 });
             }
             else {
-                console.log(item['cost']);
-                console.log(item['limit']);
-
                 addNewCard(item['name'], item['cost']/item['limit'], item['cost'], item['limit']);
             }
         })
@@ -237,13 +253,19 @@ document.addEventListener("DOMContentLoaded", function(event) {
             xhr.setRequestHeader('Content-Type', 'application/json');
 
             xhr.onload = function() {
-                console.log(xhr.responseText);
                 var res = JSON.parse(xhr.responseText);
                 if(xhr.status !== 200){
                     signal("Network Error:"+xhr.status);
                 }
                 if(res["completed"]){
                     signal('New category was created');
+                    console.log("CREATE CATEGORY - POST: /cats");
+                    console.log('SENT: ');
+                    console.log(cat_object);
+                    console.log('RECEIVED: ');
+                    console.log(res);
+                    console.log("--------------------------------");
+
                     addNewCard(categoryName,.0, 0, categoryLimit)
                 }
                 else {

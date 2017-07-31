@@ -115,17 +115,30 @@ def remove_category(selected_cat):
 
 def get_category(selected_cat_name):
     cat_exists = Category.query.filter_by(name=selected_cat_name).first().as_dict()
-    print(cat_exists)
     if cat_exists:
         s = db.session.query(func.sum(Purchase.cost)).filter(Purchase.cat_id == cat_exists['id']).scalar()
         if s is None:
             s = 0
-        return {
-            'name': cat_exists['name'],
-            'cost': s,
-            'limit': cat_exists['limit'],
-            'purchases': get_purchases_by_cat(selected_cat_name)
-        }
+        pts = db.session.query(func.sum(Category.limit)).scalar()
+
+        if selected_cat_name == 'uncategorized':
+            uncat_id = Category.query.filter_by(name='uncategorized').first().id
+            x = db.session.query(func.sum(Purchase.cost)).filter(Purchase.cat_id == uncat_id).scalar()
+            return {
+                'name': cat_exists['name'],
+                'cost': s,
+                'limit': cat_exists['limit'],
+                'purchases': get_purchases_by_cat(selected_cat_name),
+                'percent_total_spending': int(round((x/pts)*100, 0))
+            }
+        else:
+            return {
+                'name': cat_exists['name'],
+                'cost': s,
+                'limit': cat_exists['limit'],
+                'purchases': get_purchases_by_cat(selected_cat_name),
+                'percent_total_spending': int(round((cat_exists['limit']/pts)*100, 0))
+            }
 
     return {}
 
@@ -138,7 +151,6 @@ def get_all_categories():
             if s is None:
                 s = 0
             item['cost'] = s
-        print(raw_info)
         return raw_info
     except exc.SQLAlchemyError:
         return {}
@@ -221,14 +233,12 @@ def skeleton():
 
 @app.route("/cats", methods=["GET", "DELETE", "POST"])
 def cats():
-
     if request.method == 'GET':
         if 'cat' in request.args:
             return json.dumps({
                 'category': get_category(request.args['cat'])
             })
         elif 'cat_page' in request.args:
-            print(get_category(request.args['cat_page']))
             return render_template('purchaseList.html', info=get_category(request.args['cat_page']))
         else:
             return json.dumps({
